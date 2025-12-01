@@ -125,7 +125,7 @@ int main(void)
 
 
 
-	  buf[0] = 0x00;
+	  buf[0] = 0x02;
 	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 1, HAL_MAX_DELAY);
 	  if ( ret != HAL_OK )
 	  {
@@ -150,7 +150,7 @@ int main(void)
 	  printf("0x%x\r\n", msb_comb);
 
 
-	  buf[0] = 0x01;
+	  buf[0] = 0x03;
 	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 1, HAL_MAX_DELAY);
 	  if ( ret != HAL_OK )
 	  {

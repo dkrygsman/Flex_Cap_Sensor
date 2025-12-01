@@ -35,6 +35,30 @@ void fdc1004_init(I2C_HandleTypeDef *i2c)
 	uint8_t fdc1004_address = 0x50 << 1;
 
 	// ****************************************************************************************************************************************************
+	// I2C read from register 0xFE for MFG (TI) ID
+
+	buffer[0] = 0xFE;
+	status = HAL_I2C_Master_Transmit(i2c, fdc1004_address, buffer, 1, HAL_MAX_DELAY);
+	if ( status != HAL_OK )
+	{
+		printf("TX Fail\r\n");
+	}
+	else
+	{
+		status = HAL_I2C_Master_Receive(i2c, fdc1004_address, buffer, 2, HAL_MAX_DELAY);
+		if ( status != HAL_OK )
+		{
+			printf("RX Fail\r\n");
+		}
+		else
+		{
+			printf("FDC MFG ID Read Success!\r\n");
+			//printf("%d\r\n", buffer[0]);
+			//printf("%d\r\n", buffer[1]);
+		}
+	}
+
+	// ****************************************************************************************************************************************************
 	// I2C read from register 0xFF for FDC 1004 Device ID
 
 	buffer[0] = 0xFF;
@@ -79,7 +103,7 @@ void fdc1004_init(I2C_HandleTypeDef *i2c)
 
 	buffer[0] = 0x0c;
 	buffer[1] = 0b00000101;
-	buffer[2] = 0b10000000;
+	buffer[2] = 0b01000000;
 	status = HAL_I2C_Master_Transmit(i2c, fdc1004_address, buffer, 3, HAL_MAX_DELAY);
 	if ( status != HAL_OK )
 	{
@@ -109,6 +133,48 @@ void fdc1004_init(I2C_HandleTypeDef *i2c)
 		else
 		{
 			printf("FDC Config Read Success!\r\n");
+			//printf("%d\r\n", buffer[0]);
+			//printf("%d\r\n", buffer[1]);
+		}
+	}
+
+	// ****************************************************************************************************************************************************
+	// I2C Write to Register 0x09, configuring measure 2 to input channels
+	// register config includes channel A and B, and offset capacitance
+
+
+	buffer[0] = 0x09;
+	buffer[1] = 0b00110000;
+	buffer[2] = 0b00000000;
+	status = HAL_I2C_Master_Transmit(i2c, fdc1004_address, buffer, 3, HAL_MAX_DELAY);
+	if ( status != HAL_OK )
+	{
+		printf("TX Fail\r\n");
+	}
+	else
+	{
+		printf("FDC Measure 1 Config Write Success!\r\n");
+	}
+
+	// ****************************************************************************************************************************************************
+	// I2C Read to Register 0x0C, the measurement config register
+
+	buffer[0] = 0x08;
+	status = HAL_I2C_Master_Transmit(i2c, fdc1004_address, buffer, 1, HAL_MAX_DELAY);
+	if ( status != HAL_OK )
+	{
+		printf("TX Fail\r\n");
+	}
+	else
+	{
+		status = HAL_I2C_Master_Receive(i2c, fdc1004_address, buffer, 2, HAL_MAX_DELAY);
+		if ( status != HAL_OK )
+		{
+			printf("RX Fail\r\n");
+		}
+		else
+		{
+			printf("FDC Measure 1 Config Read Success!\r\n");
 			//printf("%d\r\n", buffer[0]);
 			//printf("%d\r\n", buffer[1]);
 		}
