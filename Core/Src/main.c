@@ -18,12 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fdc1004.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 /* USER CODE END Includes */
 
@@ -51,6 +53,12 @@ UART_HandleTypeDef huart2;
 
 static const uint8_t FDC1004_ADDR = 0x50 << 1;
 
+uint8_t buf[12];
+HAL_StatusTypeDef ret;
+uint16_t msb_comb, lsb_comb;
+unsigned long tot_comb;
+float cap;
+
 
 /* USER CODE END PV */
 
@@ -76,12 +84,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
-	uint8_t buf[12];
-
-	HAL_StatusTypeDef ret;
-
-
 
   /* USER CODE END 1 */
 
@@ -114,78 +116,9 @@ int main(void)
 
 
 
+  fdc1004_init(&hi2c1);
 
 
-  	  buf[0] = 0xFF;
-  	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 1, HAL_MAX_DELAY);
-  	  if ( ret != HAL_OK )
-  	  {
-  		  printf("TX Fail\r\n");
-  	  }
-  	  else
-  	  {
-  		  ret = HAL_I2C_Master_Receive(&hi2c1, FDC1004_ADDR, buf, 2, HAL_MAX_DELAY);
-  		  if ( ret != HAL_OK )
-  		  {
-  			  printf("RX Fail\r\n");
-  		  }
-  		  else
-  		  {
-  			  printf("FDC Dev ID Read Success!\r\n");
-  			  printf("%d\r\n", buf[0]);
-  			  printf("%d\r\n", buf[1]);
-  		  }
-  	  }
-
-
-  	buf[0] = 0x0c;
-	  buf[1] = 0b10000000;
-	  buf[2] = 0b00000000;
-	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 3, HAL_MAX_DELAY);
-	  if ( ret != HAL_OK )
-	  {
-			  printf("TX Fail\r\n");
-	  }
-	  else
-	  {
-		  printf("FDC Config Reset Write Success!\r\n");
-	  }
-
-	  buf[0] = 0x0c;
-	  buf[1] = 0b00000101;
-	  buf[2] = 0b10000000;
-	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 3, HAL_MAX_DELAY);
-	  if ( ret != HAL_OK )
-	  {
-			  printf("TX Fail\r\n");
-	  }
-	  else
-	  {
-		  printf("FDC Config Write Success!\r\n");
-	  }
-
-
-
-	  buf[0] = 0x0C;
-	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 1, HAL_MAX_DELAY);
-	  if ( ret != HAL_OK )
-	  {
-		  printf("TX Fail\r\n");
-	  }
-	  else
-	  {
-		  ret = HAL_I2C_Master_Receive(&hi2c1, FDC1004_ADDR, buf, 2, HAL_MAX_DELAY);
-		  if ( ret != HAL_OK )
-		  {
-			  printf("RX Fail\r\n");
-		  }
-		  else
-		  {
-			  printf("FDC Dev ID Read Success!\r\n");
-			  printf("%d\r\n", buf[0]);
-			  printf("%d\r\n", buf[1]);
-		  }
-	  }
 
   while (1)
   {
@@ -208,10 +141,14 @@ int main(void)
 		  else
 		  {
 			  printf("FDC Measure 1 MSB Read Success!\r\n");
-			  printf("%d\r\n", buf[0]);
-			  printf("%d\r\n", buf[1]);
+			  printf("0x%x\r\n", buf[0]);
+			  printf("0x%x\r\n", buf[1]);
 		  }
 	  }
+
+	  msb_comb = ((uint16_t)buf[0] << 8) | buf[1];
+	  printf("0x%x\r\n", msb_comb);
+
 
 	  buf[0] = 0x01;
 	  ret = HAL_I2C_Master_Transmit(&hi2c1, FDC1004_ADDR, buf, 1, HAL_MAX_DELAY);
@@ -229,10 +166,22 @@ int main(void)
 		  else
 		  {
 			  printf("FDC Measure 1 LSB Read Success!\r\n");
-			  printf("%d\r\n", buf[0]);
-			  printf("%d\r\n", buf[1]);
+			  printf("0x%x\r\n", buf[0]);
+			  printf("0x%x\r\n", buf[1]);
 		  }
 	  }
+
+
+
+	  tot_comb = ((uint32_t)msb_comb << 8) | buf[0];
+	  printf("0x%lu\r\n", tot_comb);
+
+	  cap = tot_comb;
+
+	  cap = cap/524288;
+	  printf("Capacitance: %.6f\r\n", cap);
+
+
 
 	  HAL_Delay(100);
 
